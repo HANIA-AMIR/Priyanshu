@@ -44,10 +44,6 @@ module.exports.handleEvent = async function({ api, event, args, Threads, Users }
      return api.sendMessage("Ye Bc Kya HoTa Hai 🤔 ", threadID);
    };
 
- if (event.body.toLowerCase() == "assalamualaikum" || event.body.toLowerCase() == "assalam alaikum" || event.body.toLowerCase() == "aoa" || event.body.toLowerCase() == "a.o.a") {
-    return api.sendMessage("Wa alaikum assalam", threadID);
-}
-  
    if ((event.body.toLowerCase() == "lol") || (event.body.toLowerCase() == "lol bot")) {
      return api.sendMessage("Khud ko Kya LeGend Samjhte Ho 😂", threadID);
    };
@@ -67,15 +63,15 @@ module.exports.handleEvent = async function({ api, event, args, Threads, Users }
    };
 
    if ((event.body.toLowerCase() == "owner") || (event.body.toLowerCase() == "Owner")) {
-     return api.sendMessage("💝🥀𝐎𝐖𝐍𝐄𝐑:- ☞꧁𝐀𝐇𝐌𝐀𝐃-𝐀𝐋𝐈꧂☜ 💫\n🖤𝚈𝚘𝚞 𝙲𝚊𝚗 𝙲𝚊𝚕𝚕 𝙷𝚒𝚖 𝔸ℍ𝕄𝔸𝔻🖤\n😳𝐇𝐢𝐬 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤 𝐢𝐝🤓:- ☞https://www.facebook.com/ahmadali.safdar.52?mibextid=ZbWKwL \n👋For Any Kind Of Help Contact On Telegram  Username 👉 @ahmadalisafdar3😇", threadID);
+     return api.sendMessage("💝🥀𝐎𝐖𝐍𝐄𝐑:- ☞𝕻𝖗𝖎𝖞𝖆𝖓𝖘𝖍 𝕽𝖆𝖏𝖕𝖚𝖙☜ 💫\n🖤𝚈𝚘𝚞 𝙲𝚊𝚗 𝙲𝚊𝚕𝚕 𝙷𝚒𝚖 ℙ𝕣𝕚𝕪𝕒𝕟𝕤𝕙🖤\n😳𝐇𝐢𝐬 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤 𝐢𝐝🤓:- ☞ www.facebook.com/priyanshu.rajput.official\n👋For Any Kind Of Help Contact On Telegram  Username 👉 @Priyanshrajput😇", threadID);
    };
 
    if ((event.body.toLowerCase() == "tumhe banaya kon hai") || (event.body.toLowerCase() == "tumko banaya kisne")) {
-     return api.sendMessage("Ahmad Ali  ❤️ My Creator. He loves me & Edit Me Daily. Ye Bot Sirf Owner k Liye h. Mujhe Aap logo ko Hasane k liye banya gya h Toh Muh Ladkaye Mat Rakkha Karo. Har Waqt Haste Raho.", threadID);
+     return api.sendMessage("Priyansh  ❤️ My Creator. He loves me & Edit Me Daily. Ye Bot Sirf Owner k Liye h. Mujhe Aap logo ko Hasane k liye banya gya h Toh Muh Ladkaye Mat Rakkha Karo. Har Waqt Haste Raho.", threadID);
    };
 
   if ((event.body.toLowerCase() == "bot admin") || (event.body.toLowerCase() == "bot ka admin kon ha")) {
-     return api.sendMessage("He is Ahmad. He Gives his name Ahmee everywhare", threadID);
+     return api.sendMessage("He is Priyansh. He Gives his name Priyansh everywhare", threadID);
    };
 
    if ((event.body.toLowerCase() == "shadi karoge") || (event.body.toLowerCase() == "mujhse shadi karoge?")) {
@@ -198,7 +194,6 @@ module.exports.handleEvent = async function({ api, event, args, Threads, Users }
    if ((event.body.toLowerCase() == "kese ho") || (event.body.toLowerCase() == "kaise ho") || (event.body.toLowerCase() == "kese ho ji") || (event.body.toLowerCase() == "how are you") || (event.body.toLowerCase() == "how are you?")) {
      return api.sendMessage("M Tabhi Accha hota hu, Jab Apko Hasta Huye Dekhta hu☺️", threadID);
    };
-
    if ((event.body.toLowerCase() == "is the bot sad") || (event.body.toLowerCase() == "is the bot sad")) {
      return api.sendMessage("Why can't I be sad because of everyone <3 love you <3", threadID);
    };
@@ -237,10 +232,12 @@ module.exports.handleEvent = async function({ api, event, args, Threads, Users }
    mess = "{name}"
   
   if (event.body.indexOf("Bot") == 0 || (event.body.indexOf("bot") == 0)) {
-    var msg = { 
-      body: `✨🌿❣︎${name}❣︎🌿✨,    ━━━━━━✦🌹✦━━━━━━ \n\n『\n   ${rand} 』\n\n  ╔═════❀❦︎❀═════╗           ★꧁𝐎𝐖𝐍𝐄𝐑꧂★ 𝐀𝐇𝐌𝐀𝐃 𝐀𝐋𝐈  ╚═════❀❦︎❀═════╝`
+    var msg = {
+      body: `${name}, ${rand}`
     }
-
     return api.sendMessage(msg, threadID, messageID);
   };
-  
+
+}
+
+module.exports.run = function({ api, event, client, __GLOBAL }) { }
