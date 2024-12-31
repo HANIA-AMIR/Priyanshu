@@ -33,7 +33,7 @@ module.exports.run = async function({ api, event, Users, Threads }) {
   const hours = moment.tz("Asia/Kolkata").format("HH");
 	const data = global.data.threadData.get(parseInt(threadID)) || (await Threads.getData(threadID)).data;
 	const name = global.data.userName.get(event.logMessageData.leftParticipantFbId) || await Users.getNameUser(event.logMessageData.leftParticipantFbId);
-	const type = (event.author == event.logMessageData.leftParticipantFbId) ? "leave" : "managed";
+	const type = (event.author == event.logMessageData.leftParticipantFbId) ? "leave" : "remove";
 	const path = join(__dirname, "events", "123.mp4");
 	const pathGif = join(path, `${threadID}123.mp4`);
 	var msg, formPush
