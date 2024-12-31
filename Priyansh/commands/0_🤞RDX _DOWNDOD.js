@@ -3,7 +3,7 @@ module.exports = {
     name: "linkAutoDownload",
     version: "1.3.0",
     hasPermssion: 0,
-    credits: "RDX_ZAIN",
+    credits: "𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭",
     description:
       "Automatically detects links in messages and downloads the file.",
     commandCategory: "Utilities",
@@ -19,7 +19,7 @@ module.exports = {
     const body = content.toLowerCase();
     const { alldown } = require("nayan-videos-downloader");
     if (body.startsWith("https://")) {
-      api.setMessageReaction("📿", event.messageID, (err) => {}, true);
+      api.setMessageReaction("⏳", event.messageID, (err) => {}, true);
       const data = await alldown(content);
       console.log(data);
       const { low, high, title } = data.data;
