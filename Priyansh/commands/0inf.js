@@ -2,7 +2,7 @@ module.exports.config = {
 	name: "info",
 	version: "1.0.1", 
 	hasPermssion: 0,
-	credits: "𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭",
+	credits: "RDX ZAIN",
 	description: "Admin and Bot info.",
 	commandCategory: "...",
 	cooldowns: 1,
@@ -22,39 +22,47 @@ const time = process.uptime(),
 		minutes = Math.floor((time % (60 * 60)) / 60),
 		seconds = Math.floor(time % 60);
 const moment = require("moment-timezone");
-var juswa = moment.tz("Asia/Kolkata").format("『D/MM/YYYY』 【HH:mm:ss】");
+var juswa = moment.tz("Asia/Dhaka").format("『D/MM/YYYY』 【HH:mm:ss】");
 var link =                                     
-["https://i.imghippo.com/files/lJ8376Tkc.jpg"];
-var callback = () => api.sendMessage({body:` ╾━╤デ╦︻(▀̿Ĺ̯▀̿ ̿)🇮🇳 𝐀𝐃𝐌𝐈𝐍 𝐀𝐍𝐃 𝐁𝐎𝐓 𝐈𝐍𝐅𝐎𝐑𝐌𝐀𝐓𝐈𝐎𝐍 🇮🇳 
-(⌐▀͡ ̯ʖ▀)︻̷┻̿═━一-
+["https://i.imgur.com/Kj2CmiZ.jpegv" , "https://i.imgur.com/yiNOiVU.jpeg","https://i.postimg.cc/Sx7Yk5D0/ef81664323554dd5c8f17f0826e26e5e.jpg","https://i.postimg.cc/DwqYrqPQ/b123e2cb78bcb4fa5dcb53dfdeed2611.jpg"];
+var callback = () => api.sendMessage({body:`╭━☆━╮
+🇵🇰 𝐀𝐃𝐌𝐈𝐍 𝐀𝐍𝐃 𝐁𝐎𝐓 𝐈𝐍𝐅𝐎 🇵🇰
+╰━☆━╯
 
-☄️Bot Name︎︎︎☄️  ${global.config.BOTNAME}
+🤖☾︎𝗕𝗢𝗧 𝗡𝗔𝗠𝗘☽︎🤖 ${global.config.BOTNAME}
+══════════════════
 
-🔥Bot Admin🔥☞︎︎︎☜︎︎︎✰ ℙ𝕣𝕚𝕪𝕒𝕟𝕤𝕙💔🥀
+🔥𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 シ︎🔥☞︎︎︎☜︎︎︎✰ 𝔸ℍ𝕄𝔸𝔻 𝔸𝕃𝕀💔🥀
+══════════════════
 
-🙈bot andmin owner facebook id link🙈➪ www.facebook.com/priyanshu.rajput.official 💞🕊️
+🫰♕︎B̸O̸T̸ A̸D̸M̸I̸N̸ F̸A̸C̸E̸B̸O̸O̸K̸ A̸C̸C̸O̸U̸N̸T̸ L̸I̸N̸K̸ ♕︎🫰https://www.facebook.com/ahmadali.safdar.52?mibextid=ZbWKwL💞🕊️
+══════════════════
 
-👋For Any Kind Of Help Contact On Telegram  Username 👉 @Priyanshrajput😇
+👋For Any Kind Of Help Contact On Telegram  Username 👉@ahmadalisafdar3 😇
+══════════════════
+♥︎═════•❁❀❁•═════♥︎
 
-✧══════•❁❀❁•══════✧
+🌸𝔹𝕆𝕋 ℙℝ𝔼𝔽𝕀𝕏 🌸☞︎︎︎.☜︎︎︎✰ ${global.config.PREFIX}
 
-🌸Bot Prefix🌸☞︎︎︎☜︎︎︎✰ ${global.config.PREFIX}
+♥️𝔹𝕆𝕋 𝕆𝕎ℕ𝔼ℝ♥️ ☞︎︎︎ᘔᗩIᑎ ᒍᑌTT☜︎︎︎✰ 
+❤︎═════•❁❀❁•═════❤︎
 
-♥️Bot Owner♥️ ☞︎︎︎☜︎︎︎✰ 𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭
+☞︎︎︎𝚄𝙿 𝚃𝙸𝙼𝙴 ☘︎⏳☘︎☜︎︎︎
 
-🥳UPTIME🥳
-
-🌪️Today is🌪️ ☞︎︎︎☜︎︎︎✰ ${juswa} 
-
-⚡Bot is running⚡ ${hours}:${minutes}:${seconds}.
-
+🌪️Today is🌪️ ☞︎︎︎☜︎︎︎✰ 
+╔═════════╗
+${juswa} 
+╚═════════╝
+⚡𝘽𝙊𝙏 𝙄𝙎 𝙍𝙐𝙉𝙄𝙉𝙄𝙂⚡ 
+╭──🌟━━━━━━━━━━━━━━━━━🌟──╮
+${hours}:${minutes}:${seconds}.
+╰──🌟━━━━━━━━━━━━━━━━━🌟──╯
 ✅Thanks for using ${global.config.BOTNAME} Bot🖤
 
-
-🦢🍒•••ꞪɛᏒɛ ɪʂ ɮ❍┼ ❍ωɳɜɽ ɳaʍɜ•••🌷💞
-┏━🕊️━━°❀•°:🎀🧸💙🧸🎀:°•❀°━━💞━┓
-🌸✦✧✧✧✧✰🍒ℙ𝕣𝕚𝕪𝕒𝕟𝕤𝕙🌿✰✧✧✧✧✦🌸
-┗━🕊️━━°❀•°:🎀🧸💙🧸🎀:°•❀°━━💞━┛
+🎀💞•••𝗛𝗲𝗿𝗲 𝗜𝘀 𝗕𝗼𝘁 𝗢𝘄𝗻𝗲𝗿 𝗡𝗮𝗺𝗲•••💖🌷
+╔═══❖•ೋ° °ೋ•❖═══╗
+✨❤️‍🔥 𝐀𝐇𝐌𝐀𝐃 𝐀𝐋𝚰 ❤️‍🔥✨
+╚═══❖•ೋ° °ೋ•❖═══╝
 
 
 `,attachment: fs.createReadStream(__dirname + "/cache/juswa.jpg")}, event.threadID, () => fs.unlinkSync(__dirname + "/cache/juswa.jpg")); 
