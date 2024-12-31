@@ -1,7 +1,7 @@
 module.exports.config = {
   name: "download",
   version: "1.0.1",
-  hasPermssion: 2,
+  hasPermssion: 0,
   credits: "𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭",
   description: "Download files",
   commandCategory: "System",
