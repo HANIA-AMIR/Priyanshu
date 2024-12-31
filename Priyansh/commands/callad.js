@@ -2,7 +2,7 @@ module.exports.config = {
   name: "called",
   version: "1.0.0",
   hasPermssion: 0,
-  credits: "RDX_ZAIN",
+  credits: "𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭",
   description: "Report bug of your bot to admin or comment",
   commandCategory: "Admin",
   usages: "[msg]",
