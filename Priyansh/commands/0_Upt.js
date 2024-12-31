@@ -13,7 +13,7 @@ module.exports.config = {
   name: "upt",
   version: "1.0.1",
   hasPermssion: 0,
-  credits: "SHAAN KHAN",
+  credits: "𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭",
   description: "Koii Prefix nhi",
   commandCategory: "Hukum Ke Bagher",
   usages: "Online Time Timing Dekhye",
