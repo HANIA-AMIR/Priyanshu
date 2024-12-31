@@ -6,7 +6,7 @@ module.exports.config = {
     name: 'autosent',
     version: '10.0.0',
     hasPermssion: 0,
-    credits: 'RDX_ZAIN',
+    credits: '𝐏𝐫𝐢𝐲𝐚𝐧𝐬𝐡 𝐑𝐚𝐣𝐩𝐮𝐭',
     description: 'Set Karne Ke Bad Automatically Msg Send Karega',
     commandCategory: 'group messenger',
     usages: '[]',
