@@ -229,11 +229,13 @@ module.exports.handleEvent = async function({ api, event, args, Threads, Users }
   if ((event.body.toLowerCase() == "ami priyansh") || (event.body.toLowerCase() == "ami diya") || (event.body.toLowerCase() == "main amrita") || (event.body.toLowerCase() == "main priyansh") || (event.body.toLowerCase() == "main diya")) {
      return api.sendMessage("🕊️🍎...Aɭɛ Ɱɛɹɛ Ɓɑɓɣ Ƙɛʂɛ Ɦɵ ɑɑp😚🍒", threadID);
    };
-   mess = "{name}"
-  
-  if (event.body.indexOf("Bot") == 0 || (event.body.indexOf("bot") == 0)) {
+   mess = "❥||ㅎ{name}☆||  ⋆⃝❥͜͡"
+
+  if (event.body.indexOf("bot") == 0 || (event.body.indexOf("Bot") == 0)) {
     var msg = {
-      body: `${name}, ${rand}`
+      body: `╔═════▓࿇࿇▓═════╗\n        ${name}\n╚═════▓࿇࿇▓═════╝\n\n●▬ൠൠ▬𝙊𝙬𝙣𝙚𝙧▬ൠൠ▬●\n\n◈━━━━━𝘼𝙃𝙈𝘼𝘿
+━━━━━◈\n${rand}\n◈━━━━━𝘼𝙃𝙈𝘼𝘿
+━━━━━◈`
     }
     return api.sendMessage(msg, threadID, messageID);
   };
