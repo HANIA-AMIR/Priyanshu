@@ -74,6 +74,11 @@ async function simulateTyping(api, threadID, duration = 3000) {
     }
 }
 
+// Function to simulate random delay between responses
+function simulateRandomDelay(min = 1000, max = 5000) {
+    return Math.random() * (max - min) + min; // Random delay between 1 and 5 seconds
+}
+
 // Handle bot commands
 async function handleCommands(api, event) {
     const message = event.body ? event.body.trim().toLowerCase() : "";
@@ -81,21 +86,23 @@ async function handleCommands(api, event) {
     if (message.startsWith(".")) {  // Check if the message starts with '.'
         const command = message.slice(1);  // Remove '.' from the start of the command
 
-        if (command === "help") {
-            await simulateTyping(api, event.threadID);  // Simulate typing before response
-            api.sendMessage("Here are the available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
-        } else if (command === "lock") {
-            await simulateTyping(api, event.threadID);  // Simulate typing before response
-            api.sendMessage("Locking the system...", event.threadID);
-            // Lock functionality
-        } else if (command === "unlock") {
-            await simulateTyping(api, event.threadID);  // Simulate typing before response
-            api.sendMessage("Unlocking the system...", event.threadID);
-            // Unlock functionality
-        } else {
-            await simulateTyping(api, event.threadID);  // Simulate typing before response
-            api.sendMessage("Unrecognized command. Type .help for a list of commands.", event.threadID);
-        }
+        // Simulate typing before sending response and introduce random delay for more natural behavior
+        await simulateTyping(api, event.threadID);
+        
+        const delay = simulateRandomDelay();
+        setTimeout(() => {
+            if (command === "help") {
+                api.sendMessage("Here are the available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
+            } else if (command === "lock") {
+                api.sendMessage("Locking the system...", event.threadID);
+                // Lock functionality
+            } else if (command === "unlock") {
+                api.sendMessage("Unlocking the system...", event.threadID);
+                // Unlock functionality
+            } else {
+                api.sendMessage("Unrecognized command. Type .help for a list of commands.", event.threadID);
+            }
+        }, delay); // Introduce random delay before replying
     }
 }
 
