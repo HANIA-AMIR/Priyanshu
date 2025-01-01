@@ -3,7 +3,7 @@ const axios = require("axios");
 const express = require("express");
 const path = require("path");
 const logger = require("./utils/log");
-const login = require("nextgen-fca"); // Correctly import `nextgen-fca`
+const login = require("nextgen-fca");
 
 // Initialize global restart counter
 global.countRestart = global.countRestart || 0;
@@ -32,8 +32,36 @@ app.listen(port, () => {
 });
 
 /////////////////////////////////////////////////////////
-//========= Simulate Typing Indicator =========//
+//========= Create start bot and make it loop =========//
 /////////////////////////////////////////////////////////
+
+function startBot(message) {
+    if (message) logger(message, "[ Starting ]");
+
+    const child = spawn("node", ["--trace-warnings", "--async-stack-traces", "Priyansh.js"], {
+        cwd: __dirname,
+        stdio: "inherit",
+        shell: true,
+    });
+
+    child.on("close", (codeExit) => {
+        if (codeExit !== 0 && global.countRestart < 5) {
+            global.countRestart += 1;
+            logger(`Bot exited with code ${codeExit}. Restarting... (${global.countRestart}/5)`, "[ Restarting ]");
+            startBot();
+        } else {
+            logger(`Bot stopped after ${global.countRestart} restarts.`, "[ Stopped ]");
+        }
+    });
+
+    child.on("error", (error) => {
+        logger(`An error occurred: ${JSON.stringify(error)}`, "[ Error ]");
+    });
+}
+
+///////////////////////////////////////////////////////////
+//========= Add Typing Indicator and Command Logic =======//
+///////////////////////////////////////////////////////////
 
 async function simulateTyping(api, threadID, duration = 3000) {
     try {
@@ -46,28 +74,32 @@ async function simulateTyping(api, threadID, duration = 3000) {
     }
 }
 
-/////////////////////////////////////////////////////////
-//========= Handle Commands =========//
-/////////////////////////////////////////////////////////
-
+// Handle bot commands
 function handleCommands(api, event) {
-    const message = event.body ? event.body.toLowerCase().trim() : "";
+    const message = event.body ? event.body.trim().toLowerCase() : "";  // Ensure trimming and handling case sensitivity
 
-    // Command responses
-    const responses = {
-        help: "Available commands:\n1. help - Show this list\n2. greet - Sends a greeting\n3. about - Get info about this bot",
-        greet: "Hello! How can I assist you today?",
-        about: "I'm a Messenger bot powered by NextGen-FCA. Ready to help!",
-    };
+    if (message.startsWith(".")) {  // Check if the message starts with '.'
+        const command = message.slice(1);  // Remove '.' from the start of the command
 
-    if (responses[message]) {
-        simulateTyping(api, event.threadID).then(() => {
-            api.sendMessage(responses[message], event.threadID);
-        });
-    } else {
-        simulateTyping(api, event.threadID).then(() => {
-            api.sendMessage("Unrecognized command. Type 'help' for a list of commands.", event.threadID);
-        });
+        if (command === "help") {
+            simulateTyping(api, event.threadID).then(() => {
+                api.sendMessage("Here are the available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
+            });
+        } else if (command === "lock") {
+            simulateTyping(api, event.threadID).then(() => {
+                api.sendMessage("Locking the system...", event.threadID);
+                // Add lock functionality here
+            });
+        } else if (command === "unlock") {
+            simulateTyping(api, event.threadID).then(() => {
+                api.sendMessage("Unlocking the system...", event.threadID);
+                // Add unlock functionality here
+            });
+        } else {
+            simulateTyping(api, event.threadID).then(() => {
+                api.sendMessage("Unrecognized command. Type .help for a list of commands.", event.threadID);
+            });
+        }
     }
 }
 
@@ -104,3 +136,6 @@ axios.get("https://raw.githubusercontent.com/priyanshu192/bot/main/package.json"
     .catch((err) => {
         logger(`Failed to fetch update info: ${err.message}`, "[ Update Error ]");
     });
+
+// Start the bot
+startBot();
