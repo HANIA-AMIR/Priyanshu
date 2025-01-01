@@ -3,7 +3,7 @@ const axios = require("axios");
 const express = require("express");
 const path = require("path");
 const logger = require("./utils/log");
-const { listenMqtt } = require("nextgen-fca"); // Importing nextgen-fca
+const login = require("nextgen-fca"); // Correctly import `nextgen-fca`
 
 // Initialize global restart counter
 global.countRestart = global.countRestart || 0;
@@ -90,11 +90,14 @@ function handleCommands(api, event) {
 }
 
 ///////////////////////////////////////////////////////////
-//========= Start Listening for Events (nextgen-fca) =====//
+//========= Login and Start Listening for Events =========//
 ///////////////////////////////////////////////////////////
 
-listenMqtt({ appState: require("./appstate.json") }, (err, api) => {
-    if (err) return logger(`Login error: ${err.message}`, "[ Error ]");
+login({ appState: require("./appstate.json") }, (err, api) => {
+    if (err) {
+        logger(`Login error: ${err.message}`, "[ Error ]");
+        return;
+    }
 
     logger("Bot logged in and listening for events...", "[ Starting ]");
     api.listenMqtt((error, event) => {
