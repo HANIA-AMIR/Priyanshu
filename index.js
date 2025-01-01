@@ -3,7 +3,7 @@ const axios = require("axios");
 const express = require("express");
 const path = require("path");
 const logger = require("./utils/log");
-const login = require("nextgen-fca");
+const login = require("nextgen-fca"); // Correctly import `nextgen-fca`
 
 // Initialize global restart counter
 global.countRestart = global.countRestart || 0;
@@ -67,7 +67,7 @@ async function simulateTyping(api, threadID, duration = 3000) {
     try {
         // Send typing indicator
         await api.sendTypingIndicator(threadID, true);
-        await new Promise((resolve) => setTimeout(resolve, duration)); // Simulate typing duration
+        await new Promise((resolve) => setTimeout(resolve, duration)); // Wait for duration
         await api.sendTypingIndicator(threadID, false); // Stop typing
     } catch (err) {
         console.error("Error simulating typing:", err.message);
@@ -76,23 +76,22 @@ async function simulateTyping(api, threadID, duration = 3000) {
 
 // Handle bot commands
 async function handleCommands(api, event) {
-    const message = event.body ? event.body.trim().toLowerCase() : "";  // Ensure trimming and handling case sensitivity
+    const message = event.body ? event.body.trim().toLowerCase() : "";
 
     if (message.startsWith(".")) {  // Check if the message starts with '.'
         const command = message.slice(1);  // Remove '.' from the start of the command
 
-        // Command Handling
         if (command === "help") {
             await simulateTyping(api, event.threadID);  // Simulate typing before response
             api.sendMessage("Here are the available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
         } else if (command === "lock") {
             await simulateTyping(api, event.threadID);  // Simulate typing before response
             api.sendMessage("Locking the system...", event.threadID);
-            // Add lock functionality here
+            // Lock functionality
         } else if (command === "unlock") {
             await simulateTyping(api, event.threadID);  // Simulate typing before response
             api.sendMessage("Unlocking the system...", event.threadID);
-            // Add unlock functionality here
+            // Unlock functionality
         } else {
             await simulateTyping(api, event.threadID);  // Simulate typing before response
             api.sendMessage("Unrecognized command. Type .help for a list of commands.", event.threadID);
