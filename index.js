@@ -32,36 +32,8 @@ app.listen(port, () => {
 });
 
 /////////////////////////////////////////////////////////
-//========= Create start bot and make it loop =========//
+//========= Simulate Typing Indicator =========//
 /////////////////////////////////////////////////////////
-
-function startBot(message) {
-    if (message) logger(message, "[ Starting ]");
-
-    const child = spawn("node", ["--trace-warnings", "--async-stack-traces", "Priyansh.js"], {
-        cwd: __dirname,
-        stdio: "inherit",
-        shell: true,
-    });
-
-    child.on("close", (codeExit) => {
-        if (codeExit !== 0 && global.countRestart < 5) {
-            global.countRestart += 1;
-            logger(`Bot exited with code ${codeExit}. Restarting... (${global.countRestart}/5)`, "[ Restarting ]");
-            startBot();
-        } else {
-            logger(`Bot stopped after ${global.countRestart} restarts.`, "[ Stopped ]");
-        }
-    });
-
-    child.on("error", (error) => {
-        logger(`An error occurred: ${JSON.stringify(error)}`, "[ Error ]");
-    });
-}
-
-///////////////////////////////////////////////////////////
-//========= Add Typing Indicator and Command Logic =======//
-///////////////////////////////////////////////////////////
 
 async function simulateTyping(api, threadID, duration = 3000) {
     try {
@@ -74,17 +46,27 @@ async function simulateTyping(api, threadID, duration = 3000) {
     }
 }
 
-// Handle bot commands
-function handleCommands(api, event) {
-    const message = event.body ? event.body.toLowerCase() : "";
+/////////////////////////////////////////////////////////
+//========= Handle Commands =========//
+/////////////////////////////////////////////////////////
 
-    if (message === "!help") {
+function handleCommands(api, event) {
+    const message = event.body ? event.body.toLowerCase().trim() : "";
+
+    // Command responses
+    const responses = {
+        help: "Available commands:\n1. help - Show this list\n2. greet - Sends a greeting\n3. about - Get info about this bot",
+        greet: "Hello! How can I assist you today?",
+        about: "I'm a Messenger bot powered by NextGen-FCA. Ready to help!",
+    };
+
+    if (responses[message]) {
         simulateTyping(api, event.threadID).then(() => {
-            api.sendMessage("Here are the available commands:\n1. !help\n2. !lock\n3. !unlock", event.threadID);
+            api.sendMessage(responses[message], event.threadID);
         });
     } else {
         simulateTyping(api, event.threadID).then(() => {
-            api.sendMessage("Unrecognized command. Type !help for a list of commands.", event.threadID);
+            api.sendMessage("Unrecognized command. Type 'help' for a list of commands.", event.threadID);
         });
     }
 }
@@ -122,6 +104,3 @@ axios.get("https://raw.githubusercontent.com/priyanshu192/bot/main/package.json"
     .catch((err) => {
         logger(`Failed to fetch update info: ${err.message}`, "[ Update Error ]");
     });
-
-// Start the bot
-startBot();
