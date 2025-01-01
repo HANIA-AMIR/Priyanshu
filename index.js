@@ -75,30 +75,27 @@ async function simulateTyping(api, threadID, duration = 3000) {
 }
 
 // Handle bot commands
-function handleCommands(api, event) {
+async function handleCommands(api, event) {
     const message = event.body ? event.body.trim().toLowerCase() : "";  // Ensure trimming and handling case sensitivity
 
     if (message.startsWith(".")) {  // Check if the message starts with '.'
         const command = message.slice(1);  // Remove '.' from the start of the command
 
+        // Command Handling
         if (command === "help") {
-            simulateTyping(api, event.threadID).then(() => {
-                api.sendMessage("Here are the available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
-            });
+            await simulateTyping(api, event.threadID);  // Simulate typing before response
+            api.sendMessage("Here are the available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
         } else if (command === "lock") {
-            simulateTyping(api, event.threadID).then(() => {
-                api.sendMessage("Locking the system...", event.threadID);
-                // Add lock functionality here
-            });
+            await simulateTyping(api, event.threadID);  // Simulate typing before response
+            api.sendMessage("Locking the system...", event.threadID);
+            // Add lock functionality here
         } else if (command === "unlock") {
-            simulateTyping(api, event.threadID).then(() => {
-                api.sendMessage("Unlocking the system...", event.threadID);
-                // Add unlock functionality here
-            });
+            await simulateTyping(api, event.threadID);  // Simulate typing before response
+            api.sendMessage("Unlocking the system...", event.threadID);
+            // Add unlock functionality here
         } else {
-            simulateTyping(api, event.threadID).then(() => {
-                api.sendMessage("Unrecognized command. Type .help for a list of commands.", event.threadID);
-            });
+            await simulateTyping(api, event.threadID);  // Simulate typing before response
+            api.sendMessage("Unrecognized command. Type .help for a list of commands.", event.threadID);
         }
     }
 }
