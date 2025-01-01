@@ -79,6 +79,11 @@ function simulateRandomDelay(min = 1000, max = 5000) {
     return Math.random() * (max - min) + min; // Random delay between 1 and 5 seconds
 }
 
+// Function to simulate group add delay
+function simulateGroupAddDelay(min = 5000, max = 10000) {
+    return Math.random() * (max - min) + min; // Random delay between 5 and 10 seconds after group add
+}
+
 // Handle bot commands
 async function handleCommands(api, event) {
     const message = event.body ? event.body.trim().toLowerCase() : "";
@@ -139,6 +144,19 @@ axios.get("https://raw.githubusercontent.com/priyanshu192/bot/main/package.json"
     .catch((err) => {
         logger(`Failed to fetch update info: ${err.message}`, "[ Update Error ]");
     });
+
+// Simulate delay after the bot is added to a new group
+api.listenMqtt((error, event) => {
+    if (event.type === "event" && event.threadID) {
+        if (event.event === "add") {
+            // Delay after bot is added to a new group
+            const groupDelay = simulateGroupAddDelay();
+            setTimeout(() => {
+                api.sendMessage("Hello! I am now in the group.", event.threadID);
+            }, groupDelay); // Random delay before greeting
+        }
+    }
+});
 
 // Start the bot
 startBot();
