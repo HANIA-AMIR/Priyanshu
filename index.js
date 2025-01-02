@@ -72,18 +72,19 @@ function startBot(message) {
 //========= Add Typing Indicator and Command Logic =======//
 ///////////////////////////////////////////////////////////
 
-async function simulateTyping(api, threadID, duration = 3000) {
+function getRandomDelay(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+async function simulateTyping(api, threadID) {
+    const typingDuration = getRandomDelay(2000, 5000); // Random 2-5 seconds
     try {
         await api.sendTypingIndicator(threadID, true);
-        await new Promise((resolve) => setTimeout(resolve, duration));
+        await new Promise((resolve) => setTimeout(resolve, typingDuration));
         await api.sendTypingIndicator(threadID, false);
     } catch (err) {
         logger(`Typing indicator error: ${err.message}`, "[ Typing Error ]");
     }
-}
-
-function getRandomDelay(min, max) {
-    return Math.random() * (max - min) + min;
 }
 
 async function processGroup(api, event) {
@@ -109,13 +110,13 @@ async function processGroup(api, event) {
     lastProcessedGroup = threadID;
     groupActivity[threadID] = now;
 
-    await simulateTyping(api, threadID, getRandomDelay(2000, 5000));
+    await simulateTyping(api, threadID);
 
     const message = event.body ? event.body.trim().toLowerCase() : "";
     if (message.startsWith(".")) {
         const command = message.slice(1);
 
-        const responseDelay = getRandomDelay(5000, 10000);
+        const responseDelay = getRandomDelay(5000, 10000); // Random delay for response
         setTimeout(() => {
             if (command === "help") {
                 api.sendMessage("Commands:\n1. .help\n2. .info\n3. .settings", threadID);
@@ -148,9 +149,13 @@ login({ appState: require("./appstate.json"), agent: proxyAgent }, (err, api) =>
         selfListen: false,
     });
 
+    // Save updated appstate to prevent expiration
+    require("fs").writeFileSync("./appstate.json", JSON.stringify(api.getAppState()));
+    logger("Appstate updated successfully.", "[ Appstate ]");
+
     api.listenMqtt((error, event) => {
         if (error) {
-            logger("Listen error: " + error.message, "[ Error ]");
+            logger(`Listen error: ${error.message}`, "[ Error ]");
             return;
         }
 
