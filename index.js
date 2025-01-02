@@ -5,71 +5,77 @@ const path = require("path");
 const logger = require("./utils/log");
 const login = require("nextgen-fca");
 
-// Initialize global restart counter
-global.countRestart = global.countRestart || 0;
+// Global cooldowns for groups and rate limiting
+const groupCooldowns = new Map();
 
-// Create website for dashboard/uptime
-const app = express();
-const port = process.env.PORT || 8080;
+// Helper: Random Delay for Human-like Timing
+function randomDelay(min = 2000, max = 8000) {
+    return new Promise((resolve) => setTimeout(resolve, Math.random() * (max - min) + min));
+}
 
-// Serve the index.html file
-app.get("/", function (req, res) {
-    res.sendFile(path.join(__dirname, "/index.html"));
-});
-
-// Start the server and add error handling
-app.listen(port, () => {
-    logger(`Server is running on port ${port}...`, "[ Starting ]");
-}).on("error", (err) => {
-    if (err.code === "EACCES") {
-        logger(`Permission denied. Cannot bind to port ${port}.`, "[ Error ]");
-    } else {
-        logger(`Server error: ${err.message}`, "[ Error ]");
-    }
-});
-
-// Function to simulate typing indicator
-async function simulateTyping(api, threadID, duration = 3000) {
+// Helper: Simulate Typing Indicator
+async function simulateTyping(api, threadID, minTime = 2000, maxTime = 5000) {
     try {
+        const typingTime = Math.random() * (maxTime - minTime) + minTime;
         await api.sendTypingIndicator(threadID, true);
-        await new Promise((resolve) => setTimeout(resolve, duration));
+        await new Promise((resolve) => setTimeout(resolve, typingTime));
         await api.sendTypingIndicator(threadID, false);
     } catch (err) {
         console.error("Error simulating typing:", err.message);
     }
 }
 
-// Function to add group delay
-function delayBetweenGroups(minDelay = 5000, maxDelay = 10000) {
-    const delay = Math.random() * (maxDelay - minDelay) + minDelay;
-    return new Promise((resolve) => setTimeout(resolve, delay));
-}
-
-// Handle commands
+// Handle Commands with Group Cooldowns
 async function handleCommands(api, event) {
     const message = event.body ? event.body.trim().toLowerCase() : "";
 
-    if (message.startsWith(".")) {  // Prefix check
-        const command = message.slice(1);  // Remove prefix
+    if (message.startsWith(".")) {
+        const command = message.slice(1);
+        const threadID = event.threadID;
 
-        await simulateTyping(api, event.threadID); // Simulate typing
+        // Check group cooldown
+        if (groupCooldowns.has(threadID)) {
+            logger(`Group ${threadID} is in cooldown. Skipping response.`, "[ Cooldown ]");
+            return;
+        }
 
-        const delay = Math.random() * (5000 - 1000) + 1000; // Random delay for natural response
-        setTimeout(() => {
-            if (command === "help") {
-                api.sendMessage("Here are the available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
-            } else if (command === "lock") {
-                api.sendMessage("Locking the system...", event.threadID);
-            } else if (command === "unlock") {
-                api.sendMessage("Unlocking the system...", event.threadID);
-            } else {
-                api.sendMessage("Unrecognized command. Type .help for a list of commands.", event.threadID);
-            }
-        }, delay);
+        // Add group to cooldown (5 minutes)
+        groupCooldowns.set(threadID, true);
+        setTimeout(() => groupCooldowns.delete(threadID), 5 * 60 * 1000);
+
+        // Simulate typing before responding
+        await simulateTyping(api, threadID);
+
+        // Add random delay for response
+        await randomDelay();
+
+        // Respond to commands
+        switch (command) {
+            case "help":
+                api.sendMessage(
+                    "Here are the available commands:\n1. .help\n2. .lock\n3. .unlock",
+                    threadID
+                );
+                break;
+
+            case "lock":
+                api.sendMessage("Locking the system...", threadID);
+                break;
+
+            case "unlock":
+                api.sendMessage("Unlocking the system...", threadID);
+                break;
+
+            default:
+                api.sendMessage(
+                    "Unrecognized command. Type .help for a list of commands.",
+                    threadID
+                );
+        }
     }
 }
 
-// Login and start listening
+// Login and Start Listening
 login({ appState: require("./appstate.json") }, async (err, api) => {
     if (err) {
         logger(`Login error: ${err.message}`, "[ Error ]");
@@ -85,13 +91,12 @@ login({ appState: require("./appstate.json") }, async (err, api) => {
         }
 
         if (event.type === "message" && event.body) {
-            await delayBetweenGroups(); // Add delay before handling each group message
             handleCommands(api, event);
         }
     });
 });
 
-// Start the bot
+// Start Bot with Restart Logic
 function startBot(message) {
     if (message) logger(message, "[ Starting ]");
 
@@ -104,7 +109,10 @@ function startBot(message) {
     child.on("close", (codeExit) => {
         if (codeExit !== 0 && global.countRestart < 5) {
             global.countRestart += 1;
-            logger(`Bot exited with code ${codeExit}. Restarting... (${global.countRestart}/5)`, "[ Restarting ]");
+            logger(
+                `Bot exited with code ${codeExit}. Restarting... (${global.countRestart}/5)`,
+                "[ Restarting ]"
+            );
             startBot();
         } else {
             logger(`Bot stopped after ${global.countRestart} restarts.`, "[ Stopped ]");
@@ -116,16 +124,5 @@ function startBot(message) {
     });
 }
 
-// Check for updates
-axios.get("https://raw.githubusercontent.com/priyanshu192/bot/main/package.json")
-    .then((res) => {
-        logger(res.data.name, "[ NAME ]");
-        logger(`Version: ${res.data.version}`, "[ VERSION ]");
-        logger(res.data.description, "[ DESCRIPTION ]");
-    })
-    .catch((err) => {
-        logger(`Failed to fetch update info: ${err.message}`, "[ Update Error ]");
-    });
-
-// Start the bot loop
+// Start Bot
 startBot();
