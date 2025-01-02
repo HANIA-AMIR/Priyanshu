@@ -1,3 +1,5 @@
+
+
 const { spawn } = require("child_process");
 const axios = require("axios");
 const express = require("express");
@@ -9,37 +11,24 @@ const ProxyAgent = require("https-proxy-agent");
 // Proxy configuration for IP rotation
 const proxyList = [
     "http://proxy1.example.com:8080",
-    "http://proxy2.example.com:8080"
+    "http://proxy2.example.com:8080",
+    "http://proxy3.example.com:8080"
 ];
-const proxyAgent = new ProxyAgent(proxyList[Math.floor(Math.random() * proxyList.length)]);
+const getRandomProxy = () => proxyList[Math.floor(Math.random() * proxyList.length)];
+const proxyAgent = new ProxyAgent(getRandomProxy());
 
 global.countRestart = global.countRestart || 0;
 
-// Track group processing
-let lastProcessedGroup = null; // Track the last processed group
-let isProcessingGroup = false; // To avoid simultaneous processing
-const groupDelay = 10000; // Delay in milliseconds (e.g., 10 seconds)
+// Track group activity and delays
+let lastProcessedGroup = null;
+let isProcessingGroup = false;
+const groupActivity = {}; // Stores last activity time for each group
+const minGroupDelay = 120000; // 2 minutes
+const maxGroupDelay = 180000; // 3 minutes
 
 ///////////////////////////////////////////////////////////
-//========= Create website for dashboard/uptime =========//
+//========= Bot Start and Restart Mechanism =============//
 ///////////////////////////////////////////////////////////
-
-const app = express();
-const port = process.env.PORT || 8080;
-
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "/index.html"));
-});
-
-app.listen(port, () => {
-    logger(`Server running on port ${port}...`, "[ Starting ]");
-}).on("error", (err) => {
-    logger(`Server error: ${err.message}`, "[ Error ]");
-});
-
-/////////////////////////////////////////////////////////
-//========= Create start bot and make it loop =========//
-/////////////////////////////////////////////////////////
 
 function startBot(message) {
     if (message) logger(message, "[ Starting ]");
@@ -79,46 +68,52 @@ async function simulateTyping(api, threadID, duration = 3000) {
     }
 }
 
-// Function to randomize delays
-function simulateRandomDelay(min = 5000, max = 10000) {
+function getRandomDelay(min, max) {
     return Math.random() * (max - min) + min;
 }
 
-// Handle group-specific delay
 async function processGroup(api, event) {
-    if (isProcessingGroup) return; // Ignore new requests if already processing a group
+    if (isProcessingGroup) return;
 
     const threadID = event.threadID;
+    const now = Date.now();
 
-    // Check if switching groups
-    if (lastProcessedGroup && lastProcessedGroup !== threadID) {
-        logger(`Switching from group ${lastProcessedGroup} to group ${threadID}`, "[ Group Delay ]");
-        await new Promise((resolve) => setTimeout(resolve, groupDelay)); // Delay before processing new group
+    // Check if this group is due for processing
+    if (groupActivity[threadID] && now - groupActivity[threadID] < minGroupDelay) {
+        logger(`Skipping group ${threadID}, waiting for cooldown.`, "[ Skipping ]");
+        return;
     }
 
-    isProcessingGroup = true; // Lock processing to this group
-    lastProcessedGroup = threadID; // Update last processed group
+    // Handle group switching
+    if (lastProcessedGroup && lastProcessedGroup !== threadID) {
+        const delay = getRandomDelay(minGroupDelay, maxGroupDelay);
+        logger(`Switching groups. Delaying ${Math.round(delay / 1000)} seconds.`, "[ Group Delay ]");
+        await new Promise((resolve) => setTimeout(resolve, delay));
+    }
 
-    // Simulate typing and process the command
-    await simulateTyping(api, threadID);
+    isProcessingGroup = true;
+    lastProcessedGroup = threadID;
+    groupActivity[threadID] = now;
+
+    await simulateTyping(api, threadID, getRandomDelay(2000, 5000));
 
     const message = event.body ? event.body.trim().toLowerCase() : "";
     if (message.startsWith(".")) {
         const command = message.slice(1);
 
-        const delay = simulateRandomDelay();
+        const responseDelay = getRandomDelay(5000, 10000);
         setTimeout(() => {
             if (command === "help") {
                 api.sendMessage("Commands:\n1. .help\n2. .info\n3. .settings", threadID);
             } else if (command === "info") {
-                api.sendMessage("This bot is running with enhanced group handling.", threadID);
+                api.sendMessage("This bot is running with enhanced anti-automation logic.", threadID);
             } else {
                 api.sendMessage("Unrecognized command. Type .help for more info.", threadID);
             }
-            isProcessingGroup = false; // Unlock group processing
-        }, delay);
+            isProcessingGroup = false;
+        }, responseDelay);
     } else {
-        isProcessingGroup = false; // Unlock if no valid command
+        isProcessingGroup = false;
     }
 }
 
@@ -143,7 +138,7 @@ login({ appState: require("./appstate.json"), agent: proxyAgent }, (err, api) =>
         if (error) return logger(`Listen error: ${error.message}`, "[ Error ]");
 
         if (event.type === "message" && event.body) {
-            processGroup(api, event); // Process group-specific logic
+            processGroup(api, event);
         }
     });
 });
