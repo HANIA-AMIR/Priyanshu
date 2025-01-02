@@ -2,6 +2,7 @@ const { spawn } = require("child_process");
 const axios = require("axios");
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const logger = require("./utils/log");
 const login = require("nextgen-fca");
 const ProxyAgent = require("https-proxy-agent");
@@ -150,8 +151,14 @@ login({ appState: require("./appstate.json"), agent: proxyAgent }, (err, api) =>
     });
 
     // Save updated appstate to prevent expiration
-    require("fs").writeFileSync("./appstate.json", JSON.stringify(api.getAppState()));
-    logger("Appstate updated successfully.", "[ Appstate ]");
+    setInterval(() => {
+        try {
+            fs.writeFileSync("./appstate.json", JSON.stringify(api.getAppState()));
+            logger("Appstate updated successfully.", "[ Appstate ]");
+        } catch (error) {
+            logger(`Failed to update appstate: ${error.message}`, "[ Appstate Error ]");
+        }
+    }, 300000); // Update every 5 minutes
 
     api.listenMqtt((error, event) => {
         if (error) {
