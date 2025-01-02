@@ -1,5 +1,3 @@
-
-
 const { spawn } = require("child_process");
 const axios = require("axios");
 const express = require("express");
@@ -25,6 +23,22 @@ let isProcessingGroup = false;
 const groupActivity = {}; // Stores last activity time for each group
 const minGroupDelay = 120000; // 2 minutes
 const maxGroupDelay = 180000; // 3 minutes
+
+///////////////////////////////////////////////////////////
+//========= Create HTTP Server for Port Binding =========//
+///////////////////////////////////////////////////////////
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+    res.send("Bot is running and online!");
+});
+
+app.listen(port, () => {
+    logger(`Server running on port ${port}...`, "[ Port Binding ]");
+}).on("error", (err) => {
+    logger(`Server error: ${err.message}`, "[ Error ]");
+});
 
 ///////////////////////////////////////////////////////////
 //========= Bot Start and Restart Mechanism =============//
@@ -135,7 +149,7 @@ login({ appState: require("./appstate.json"), agent: proxyAgent }, (err, api) =>
     });
 
     api.listenMqtt((error, event) => {
-        if (error) return logger(`Listen error: ${error.message}`, "[ Error ]");
+        if (error) return logger(`Listen error: ${error.message}`, "[ Error ]`);
 
         if (event.type === "message" && event.body) {
             processGroup(api, event);
