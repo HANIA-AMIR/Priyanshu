@@ -149,7 +149,10 @@ login({ appState: require("./appstate.json"), agent: proxyAgent }, (err, api) =>
     });
 
     api.listenMqtt((error, event) => {
-        if (error) return logger(`Listen error: ${error.message}`, "[ Error ]`);
+        if (error) {
+            logger("Listen error: " + error.message, "[ Error ]");
+            return;
+        }
 
         if (event.type === "message" && event.body) {
             processGroup(api, event);
