@@ -5,98 +5,29 @@ const path = require("path");
 const logger = require("./utils/log");
 const login = require("nextgen-fca");
 
-// Global cooldowns for groups and rate limiting
-const groupCooldowns = new Map();
+global.countRestart = global.countRestart || 0;
 
-// Helper: Random Delay for Human-like Timing
-function randomDelay(min = 2000, max = 8000) {
-    return new Promise((resolve) => setTimeout(resolve, Math.random() * (max - min) + min));
-}
+///////////////////////////////////////////////////////////
+//========= Create website for dashboard/uptime =========//
+///////////////////////////////////////////////////////////
 
-// Helper: Simulate Typing Indicator
-async function simulateTyping(api, threadID, minTime = 2000, maxTime = 5000) {
-    try {
-        const typingTime = Math.random() * (maxTime - minTime) + minTime;
-        await api.sendTypingIndicator(threadID, true);
-        await new Promise((resolve) => setTimeout(resolve, typingTime));
-        await api.sendTypingIndicator(threadID, false);
-    } catch (err) {
-        console.error("Error simulating typing:", err.message);
-    }
-}
+const app = express();
+const port = process.env.PORT || 8080;
 
-// Handle Commands with Group Cooldowns
-async function handleCommands(api, event) {
-    const message = event.body ? event.body.trim().toLowerCase() : "";
-
-    if (message.startsWith(".")) {
-        const command = message.slice(1);
-        const threadID = event.threadID;
-
-        // Check group cooldown
-        if (groupCooldowns.has(threadID)) {
-            logger(`Group ${threadID} is in cooldown. Skipping response.`, "[ Cooldown ]");
-            return;
-        }
-
-        // Add group to cooldown (5 minutes)
-        groupCooldowns.set(threadID, true);
-        setTimeout(() => groupCooldowns.delete(threadID), 5 * 60 * 1000);
-
-        // Simulate typing before responding
-        await simulateTyping(api, threadID);
-
-        // Add random delay for response
-        await randomDelay();
-
-        // Respond to commands
-        switch (command) {
-            case "help":
-                api.sendMessage(
-                    "Here are the available commands:\n1. .help\n2. .lock\n3. .unlock",
-                    threadID
-                );
-                break;
-
-            case "lock":
-                api.sendMessage("Locking the system...", threadID);
-                break;
-
-            case "unlock":
-                api.sendMessage("Unlocking the system...", threadID);
-                break;
-
-            default:
-                api.sendMessage(
-                    "Unrecognized command. Type .help for a list of commands.",
-                    threadID
-                );
-        }
-    }
-}
-
-// Login and Start Listening
-login({ appState: require("./appstate.json") }, async (err, api) => {
-    if (err) {
-        logger(`Login error: ${err.message}`, "[ Error ]");
-        return;
-    }
-
-    logger("Bot logged in and listening for events...", "[ Starting ]");
-
-    api.listenMqtt(async (error, event) => {
-        if (error) {
-            console.error("Error in listening:", error);
-            return;
-        }
-
-        if (event.type === "message" && event.body) {
-            handleCommands(api, event);
-        }
-    });
+app.get("/", function (req, res) {
+    res.sendFile(path.join(__dirname, "/index.html"));
 });
 
-// Start Bot with Restart Logic
+app.listen(port, () => {
+    logger(`Server is running on port ${port}...`, "[ Starting ]");
+}).on("error", (err) => {
+    logger(`Server error: ${err.message}`, "[ Error ]");
+});
+
+/////////////////////////////////////////////////////////
+//========= Create start bot and make it loop =========//
+/////////////////////////////////////////////////////////
+
 function startBot(message) {
     if (message) logger(message, "[ Starting ]");
 
@@ -109,10 +40,7 @@ function startBot(message) {
     child.on("close", (codeExit) => {
         if (codeExit !== 0 && global.countRestart < 5) {
             global.countRestart += 1;
-            logger(
-                `Bot exited with code ${codeExit}. Restarting... (${global.countRestart}/5)`,
-                "[ Restarting ]"
-            );
+            logger(`Bot exited with code ${codeExit}. Restarting... (${global.countRestart}/5)`, "[ Restarting ]");
             startBot();
         } else {
             logger(`Bot stopped after ${global.countRestart} restarts.`, "[ Stopped ]");
@@ -124,5 +52,97 @@ function startBot(message) {
     });
 }
 
-// Start Bot
+///////////////////////////////////////////////////////////
+//========= Add Typing Indicator and Command Logic =======//
+///////////////////////////////////////////////////////////
+
+async function simulateTyping(api, threadID, duration = 2000) {
+    try {
+        await api.sendTypingIndicator(threadID, true); // Start typing
+        await new Promise((resolve) => setTimeout(resolve, duration)); // Wait for duration
+        await api.sendTypingIndicator(threadID, false); // Stop typing
+    } catch (err) {
+        console.error("Typing indicator error:", err.message);
+    }
+}
+
+function simulateRandomDelay(min = 1000, max = 5000) {
+    return Math.random() * (max - min) + min; // Random delay between 1-5 seconds
+}
+
+// Delay per group to reduce suspicion (3-5 minutes)
+function delayBetweenGroups(min = 180000, max = 300000) {
+    return Math.random() * (max - min) + min;
+}
+
+async function handleGroupMessages(api, event) {
+    const message = event.body ? event.body.trim().toLowerCase() : "";
+
+    if (message.startsWith(".")) {
+        const command = message.slice(1);
+
+        // Simulate typing before responding
+        await simulateTyping(api, event.threadID);
+
+        // Add random delay between responses
+        const delay = simulateRandomDelay();
+        setTimeout(async () => {
+            if (command === "help") {
+                await api.sendMessage("Available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
+            } else if (command === "lock") {
+                await api.sendMessage("System locked.", event.threadID);
+            } else if (command === "unlock") {
+                await api.sendMessage("System unlocked.", event.threadID);
+            } else {
+                await api.sendMessage("Unknown command. Type .help for commands.", event.threadID);
+            }
+        }, delay);
+    }
+}
+
+///////////////////////////////////////////////////////////
+//========= Login and Start Listening for Events =========//
+///////////////////////////////////////////////////////////
+
+login(
+    {
+        appState: require("./appstate.json"),
+        proxy: "http://your-proxy-server:port", // Add proxy to distribute traffic (optional)
+    },
+    (err, api) => {
+        if (err) {
+            logger(`Login error: ${err.message}`, "[ Error ]");
+            return;
+        }
+
+        logger("Bot logged in and listening for events...", "[ Starting ]");
+        api.listenMqtt((error, event) => {
+            if (error) return console.error("Listening Error:", error);
+
+            if (event.type === "message" && event.body) {
+                // Add delay between handling messages in groups
+                const groupDelay = delayBetweenGroups();
+                setTimeout(() => {
+                    handleGroupMessages(api, event);
+                }, groupDelay);
+            }
+        });
+    }
+);
+
+/////////////////////////////////////////////////////////
+//========= Check Updates from GitHub =========//
+/////////////////////////////////////////////////////////
+
+axios.get("https://raw.githubusercontent.com/priyanshu192/bot/main/package.json")
+    .then((res) => {
+        logger(res.data.name, "[ NAME ]");
+        logger(`Version: ${res.data.version}`, "[ VERSION ]");
+        logger(res.data.description, "[ DESCRIPTION ]");
+    })
+    .catch((err) => {
+        logger(`Failed to fetch update info: ${err.message}`, "[ Update Error ]");
+    });
+
+// Start the bot
 startBot();
