@@ -4,6 +4,14 @@ const express = require("express");
 const path = require("path");
 const logger = require("./utils/log");
 const login = require("nextgen-fca");
+const ProxyAgent = require("https-proxy-agent");
+
+// Proxy configuration for IP rotation
+const proxyList = [
+    "http://proxy1.example.com:8080",
+    "http://proxy2.example.com:8080"
+];
+const proxyAgent = new ProxyAgent(proxyList[Math.floor(Math.random() * proxyList.length)]);
 
 global.countRestart = global.countRestart || 0;
 
@@ -14,12 +22,12 @@ global.countRestart = global.countRestart || 0;
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.get("/", function (req, res) {
+app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "/index.html"));
 });
 
 app.listen(port, () => {
-    logger(`Server is running on port ${port}...`, "[ Starting ]");
+    logger(`Server running on port ${port}...`, "[ Starting ]");
 }).on("error", (err) => {
     logger(`Server error: ${err.message}`, "[ Error ]");
 });
@@ -56,45 +64,49 @@ function startBot(message) {
 //========= Add Typing Indicator and Command Logic =======//
 ///////////////////////////////////////////////////////////
 
-async function simulateTyping(api, threadID, duration = 2000) {
+async function simulateTyping(api, threadID, duration = 3000) {
     try {
-        await api.sendTypingIndicator(threadID, true); // Start typing
-        await new Promise((resolve) => setTimeout(resolve, duration)); // Wait for duration
-        await api.sendTypingIndicator(threadID, false); // Stop typing
+        await api.sendTypingIndicator(threadID, true);
+        await new Promise(resolve => setTimeout(resolve, duration));
+        await api.sendTypingIndicator(threadID, false);
     } catch (err) {
-        console.error("Typing indicator error:", err.message);
+        logger(`Typing indicator error: ${err.message}`, "[ Typing Error ]");
     }
 }
 
-function simulateRandomDelay(min = 1000, max = 5000) {
-    return Math.random() * (max - min) + min; // Random delay between 1-5 seconds
-}
-
-// Delay per group to reduce suspicion (3-5 minutes)
-function delayBetweenGroups(min = 180000, max = 300000) {
+// Function to randomize delays
+function simulateRandomDelay(min = 5000, max = 10000) {
     return Math.random() * (max - min) + min;
 }
 
-async function handleGroupMessages(api, event) {
+// Rate-limiting per group
+const groupLastMessageTime = {};
+
+async function handleCommands(api, event) {
     const message = event.body ? event.body.trim().toLowerCase() : "";
+    const threadID = event.threadID;
+    const now = Date.now();
+
+    if (!groupLastMessageTime[threadID]) groupLastMessageTime[threadID] = 0;
+
+    if (now - groupLastMessageTime[threadID] < 60000) { // Limit to 1 message per minute per group
+        return;
+    }
+
+    groupLastMessageTime[threadID] = now;
 
     if (message.startsWith(".")) {
         const command = message.slice(1);
 
-        // Simulate typing before responding
-        await simulateTyping(api, event.threadID);
-
-        // Add random delay between responses
+        await simulateTyping(api, threadID);
         const delay = simulateRandomDelay();
-        setTimeout(async () => {
+        setTimeout(() => {
             if (command === "help") {
-                await api.sendMessage("Available commands:\n1. .help\n2. .lock\n3. .unlock", event.threadID);
-            } else if (command === "lock") {
-                await api.sendMessage("System locked.", event.threadID);
-            } else if (command === "unlock") {
-                await api.sendMessage("System unlocked.", event.threadID);
+                api.sendMessage("Commands:\n1. .help\n2. .info\n3. .settings", threadID);
+            } else if (command === "info") {
+                api.sendMessage("This is a test bot running on enhanced logic.", threadID);
             } else {
-                await api.sendMessage("Unknown command. Type .help for commands.", event.threadID);
+                api.sendMessage("Unrecognized command. Type .help for more info.", threadID);
             }
         }, delay);
     }
@@ -104,45 +116,26 @@ async function handleGroupMessages(api, event) {
 //========= Login and Start Listening for Events =========//
 ///////////////////////////////////////////////////////////
 
-login(
-    {
-        appState: require("./appstate.json"),
-        proxy: "http://your-proxy-server:port", // Add proxy to distribute traffic (optional)
-    },
-    (err, api) => {
-        if (err) {
-            logger(`Login error: ${err.message}`, "[ Error ]");
-            return;
-        }
-
-        logger("Bot logged in and listening for events...", "[ Starting ]");
-        api.listenMqtt((error, event) => {
-            if (error) return console.error("Listening Error:", error);
-
-            if (event.type === "message" && event.body) {
-                // Add delay between handling messages in groups
-                const groupDelay = delayBetweenGroups();
-                setTimeout(() => {
-                    handleGroupMessages(api, event);
-                }, groupDelay);
-            }
-        });
+login({ appState: require("./appstate.json"), agent: proxyAgent }, (err, api) => {
+    if (err) {
+        logger(`Login error: ${err.message}`, "[ Error ]");
+        return;
     }
-);
 
-/////////////////////////////////////////////////////////
-//========= Check Updates from GitHub =========//
-/////////////////////////////////////////////////////////
+    logger("Bot logged in and listening...", "[ Starting ]");
 
-axios.get("https://raw.githubusercontent.com/priyanshu192/bot/main/package.json")
-    .then((res) => {
-        logger(res.data.name, "[ NAME ]");
-        logger(`Version: ${res.data.version}`, "[ VERSION ]");
-        logger(res.data.description, "[ DESCRIPTION ]");
-    })
-    .catch((err) => {
-        logger(`Failed to fetch update info: ${err.message}`, "[ Update Error ]");
+    api.setOptions({
+        listenEvents: true,
+        selfListen: false
     });
 
-// Start the bot
+    api.listenMqtt((error, event) => {
+        if (error) return logger(`Listen error: ${error.message}`, "[ Error ]");
+
+        if (event.type === "message" && event.body) {
+            handleCommands(api, event);
+        }
+    });
+});
+
 startBot();
